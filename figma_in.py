@@ -1,9 +1,11 @@
 import json
 
-with open('pain.json', encoding="utf8") as f:
+data = {}
+
+with open('testing.json', encoding="utf8") as f:
     data = json.load(f)
 
-diiju = {"id": 0, "name": "a", "type": "DOCUMENT", "bg_color": 0, "export": [], "children": []}
+diiju = {"id": 0, "name": "a", "type": "DOCUMENT", "bg_color": 0, "export": False, "children": []}
 
 def write_color(path, data):
     path["rang"] = data
@@ -31,12 +33,13 @@ def write_cornerRadius(path, data, field):
             path["cornerRadius"] = data
 
 def writer(diction, path, idString):
+    #print(diction, path)
     if diction["type"] == "DOCUMENT":
         for keys in diction.keys():
             if keys == "id":
                 val = idString+".document"
-                val = int(val, 16)
-                val = hex(val)
+                val = val.encode('utf-8')
+                val = val.hex()
                 path["id"] = val
             if keys == "name":
                 path["name"] = diction["name"]
@@ -44,11 +47,13 @@ def writer(diction, path, idString):
                 path["type"] = "DOCUMENT"
             if keys == "children":
                 i = 0
-                for child in children:
+                for child in diction["children"]:
                     if child["type"] == "CANVAS":
                         writer(child, path, idString+".document")
                     else:
-                        path["children"][i] = {}
+                        if i == 0:
+                            path["children"] = []
+                        path["children"].append({})
                         writer(child, path["children"][i], idString+".document")
                         i = i + 1
     elif diction["type"] == "CANVAS":
@@ -57,11 +62,13 @@ def writer(diction, path, idString):
                 path["bg_color"] = diction[keys]
             if keys == "children":
                 i = 0
-                for child in children:
+                for child in diction["children"]:
                     if child["type"] == "CANVAS":
                         writer(child, path, idString+".document")
                     else:
-                        path["children"][i] = {}
+                        if i == 0:
+                            path["children"] = []
+                        path["children"].append({})
                         writer(child, path["children"][i], idString+".document")
                         i = i + 1
     else:
@@ -93,8 +100,8 @@ def writer(diction, path, idString):
         for keys in diction.keys():
             if keys == "id":
                 val = idString+"."+path["type"]
-                val = int(val, 16)
-                val = hex(val)
+                val = val.encode('utf-8')
+                val = val.hex()
                 path["id"] = val
             if keys == "name":
                 path["name"] = diction["name"]
@@ -136,12 +143,14 @@ def writer(diction, path, idString):
                 path["isMaskOutline"] = diction["isMaskOutline"]
             if keys == "children":
                 i = 0
-                for child in children:
+                for child in diction["children"]:
                     if child["type"] == "CANVAS":
-                        writer(child, path, idString+"."+path["type"])
+                        writer(child, path, idString+".document")
                     else:
-                        path["children"][i] = {}
-                        writer(child, path["children"][i], idString+"."+path["type"])
+                        if i == 0:
+                            path["children"] = []
+                        path["children"].append({})
+                        writer(child, path["children"][i], idString+".document")
                         i = i + 1
             
     if diction["type"] == "TEXT":
@@ -151,9 +160,9 @@ def writer(diction, path, idString):
 
     if diction["type"] == "VECTOR" or diction["type"] == "LINE" or diction["type"] == "ELLIPSE" or diction["type"] == "REGULAR_POLYGON" or diction["type"] == "COMPONENT" or diction["type"] == "COMPONENT_SET" or diction["type"] == "BOOLEAN_OPERATION" or diction["type"] == "RECTANGLE" or diction["type"] == "TEXT" or diction["type"] == "INSTANCE":
         for keys in diction.keys():
-            if key == "fillGeometry":
+            if keys == "fillGeometry":
                 path["path"] = diction["fillGeometry"]
-            if key == "styles":
+            if keys == "styles":
                 path["styles"] = diction["styles"]
     
     if diction["type"] == "BOOLEAN_OPERATION":
@@ -161,4 +170,9 @@ def writer(diction, path, idString):
 
     if diction["type"] == "INSTANCE":
         path["componentID"] = diction["componentID"]
-        path["isMaster"] = False                    
+        path["isMaster"] = False
+
+writer(data["document"], diiju, "trial")
+
+with open("diiju_2.json", "w") as write_file:
+    json.dump(diiju, write_file, indent=4)
