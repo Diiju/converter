@@ -113,7 +113,23 @@ class xd2dju:
         newNode = {}
         nodeType = node['type']
         if nodeType == 'shape':
-            newNode['shape'] = node['shape']
+            shape = node['shape']
+            nodeType = shape['type']
+            if shape['type'] == 'rect':
+                newNode['width'] = shape['width']
+                newNode['height'] = shape['height']
+                newNode['cornerRadius'] = shape['r']
+            elif shape['type'] == 'ellipse':
+                newNode['radiusX'] = shape['rx']
+                newNode['radiusY'] = shape['ry']
+            elif shape['type'] == 'polygon':
+                newNode['cornerCount'] = shape['uxdesign#cornerCount']
+                newNode['width'] = shape['uxdesign#width']
+                newNode['height'] = shape['uxdesign#height']
+                newNode['starRatio'] = shape['uxdesign#starRatio']
+            elif shape['type'] == 'path':
+                nodeType = 'vector'
+                newNode['path'] = shape['path']
         elif nodeType == 'text':
             newNode['data'] = node['text']['rawText']
             newNode['style'] = self.textSet(node['style']['font'], node['style']['textAttributes'])
@@ -149,7 +165,7 @@ class xd2dju:
             if 'markedForExport' in ux:
                 node['export'] = ux['markedForExport']
             else:
-                node['export'] = True
+                node['export'] = False
             if 'width' in ux:
                 newNode['width'] = ux['width']
             if 'height' in ux:
@@ -192,6 +208,7 @@ class xd2dju:
         self.dji['name'] = self.projName
         self.dji['type'] = 'DOCUMENT'
         self.dji['children'] = []
+        self.dji['export'] = False
         for obj in self.artboards:
             artboard = open(self.artboards[obj]['path'], 'r', encoding='utf-8').read()
             artboard = json.loads(artboard)
